@@ -1,0 +1,322 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+    <div class="container">
+        <div class="board">
+            <div class="top-left">
+                <div></div>
+            </div>
+            <div class="top-mid">
+                <div></div>
+            </div>
+            <div class="top-right">
+                <div></div>
+            </div>
+            <div class="mid-left">
+                <div></div>
+            </div>
+            <div class="mid-mid">
+                <div></div>
+            </div>
+            <div class="mid-right">
+                <div></div>
+            </div>
+            <div class="bottom-left">
+                <div></div>
+            </div>
+            <div class="bottom-mid">
+                <div></div>
+            </div>
+            <div class="bottom-right">
+                <div></div>
+            </div>
+        </div>
+        <svg class="line" id="mysvg" width="100%" height="100%">
+            <line class="line-segment" x1="0" y1="0" x2="0" y2="0"/>
+        </svg>
+        <div class="scores">
+            <div class="player1">
+                <span id="player1-tag">Player 1 - X</span>
+                <span class="score"></span>
+            </div>
+            <div class="ties">
+                <span>Ties</span>
+                <span class="score"></span>
+            </div>
+            <div class="player2">
+                <span id="player2-tag">Player 2 - O</span>
+                <span class="score"></span>
+            </div>
+        </div>
+        <div class="change-mode">
+            <form action="/">
+                <input type="submit" value="Play VS Computer" />
+            </form>
+        </div>
+    </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded',  function() {
+                let player_1_symbol = 'x';
+                let player_2_symbol = 'o';
+                let player_score = document.querySelector(".scores > .player1 > .score");
+                let opponent_score = document.querySelector(".scores > .player2 > .score");
+                let ties_score = document.querySelector(".scores > .ties > .score");
+                let winning_squares;
+                let squares = document.querySelectorAll(".board > div");
+                let turn_n = 1;
+                document.querySelector(".player1").style.borderColor = "black";
+
+                function check_win() {
+                    const winning_combinations = [
+                        ['.top-left > div', '.top-mid > div', '.top-right > div'],
+                        ['.mid-left > div', '.mid-mid > div', '.mid-right > div'],
+                        ['.bottom-left > div', '.bottom-mid > div', '.bottom-right > div'],
+                        ['.top-left > div', '.mid-left > div', '.bottom-left > div'],
+                        ['.top-mid > div', '.mid-mid > div', '.bottom-mid > div'],
+                        ['.top-right > div', '.mid-right > div', '.bottom-right > div'],
+                        ['.top-right > div', '.mid-mid > div', '.bottom-left > div'],
+                        ['.top-left > div', '.mid-mid > div', '.bottom-right > div']
+                    ];
+
+                    for (const combination of winning_combinations) {
+                        const [a, b, c] = combination.map(selector => document.querySelector(selector));
+                        if (a.className && a.className === b.className && b.className === c.className) {
+                            winning_squares = [a, b, c];
+                            return true;
+                        };
+                    };
+                };
+
+                function game_end_animation() {
+                    var empty_squares = [];
+                    squares.forEach(square => {
+                        if(square.children[0].className != player_1_symbol && square.children[0].className != player_2_symbol) {
+                            empty_squares.push(square);
+                        };
+                    });
+                    if (check_win()) {
+                        // animate the line going across the winning combination
+                        const line = document.querySelector('.line > .line-segment');
+                        const [a, b, c] = winning_squares;
+
+                        const startX = a.offsetLeft + a.offsetWidth / 2;
+                        const startY = a.offsetTop + a.offsetHeight / 2;
+                        const endX = c.offsetLeft + c.offsetWidth / 2;
+                        const endY = c.offsetTop + c.offsetHeight / 2;
+
+                        line.setAttribute('x1', startX);
+                        line.setAttribute('y1', startY);
+                        line.setAttribute('x2', startX);
+                        line.setAttribute('y2', startY);
+
+                        const animationSteps = 50; // adjust for smoothness of animation
+                        let step = 0;
+
+                        const animateLine = () => {
+                            if (step <= animationSteps) {
+                                const x = startX + (endX - startX) * step / animationSteps;
+                                const y = startY + (endY - startY) * step / animationSteps;
+
+                                line.setAttribute('x2', x);
+                                line.setAttribute('y2', y);
+
+                                step++;
+                                requestAnimationFrame(animateLine);
+                            }
+                        };
+
+                        animateLine();
+
+                        setTimeout(() => {
+                            line.setAttribute('x1', 0);
+                            line.setAttribute('y1', 0);
+                            line.setAttribute('x2', 0);
+                            line.setAttribute('y2', 0);
+                        }, 2500);
+                    } else {
+                        // if draw, the grid blinks 4 times
+                        let board_grid = document.querySelector('.board');
+                        let blink_counter = 0;
+                        let blink_interval = setInterval(() => {
+                            if (window.getComputedStyle(board_grid).backgroundColor == 'rgb(0, 0, 0)') {
+                                board_grid.style.backgroundColor = 'white';
+                            } else if (window.getComputedStyle(board_grid).backgroundColor == 'rgb(255, 255, 255)') {
+                                board_grid.style.backgroundColor = 'black';
+                            };
+                            blink_counter++;
+                            if (blink_counter >= 4) {
+                                clearInterval(blink_interval);
+                            }
+                        }, 500);
+                    };
+                };
+
+                function check_draw() {
+                    var empty_squares = [];
+                    squares.forEach(square => {
+                        if(square.children[0].className != player_1_symbol && square.children[0].className != player_2_symbol) {
+                            empty_squares.push(square);
+                        };
+                    });
+                    if (empty_squares.length == 0) {
+                        player_turn_indicator();
+                        return true;
+                    } else {
+                        return false;
+                    };
+                };
+
+                function player_turn_indicator() {
+                    if (document.querySelector(".player1").style.borderColor == "black") {
+                        document.querySelector(".player1").style.borderColor = "white";
+                        document.querySelector(".player2").style.borderColor = "black";
+                    } else if (document.querySelector(".player2").style.borderColor == "black") {
+                        document.querySelector(".player1").style.borderColor = "black";
+                        document.querySelector(".player2").style.borderColor = "white";
+                    };
+                };
+
+                function player_turn_indicator_start() {
+                    if (player_1_symbol == 'x') {
+                        document.querySelector(".player1").style.borderColor = "black";
+                        document.querySelector(".player2").style.borderColor = "white";
+                    } else if (player_1_symbol == 'o') {
+                        document.querySelector(".player1").style.borderColor = "white";
+                        document.querySelector(".player2").style.borderColor = "black";
+                    };
+                };
+
+                function clear_board() {
+                    setTimeout(() => {
+                        squares.forEach(square => {
+                        square.children[0].removeAttribute('class');
+                        square.addEventListener('click', player_choice);
+                        player_turn_indicator_start();
+                        });
+                    }, 2500);
+                    winning_squares = [];
+                    turn_n = 1;
+                };
+
+                function check_symbol_change() {
+                        setTimeout(() => {
+                            temp = player_1_symbol;
+                            player_1_symbol = player_2_symbol;
+                            player_2_symbol = temp;
+                            /*document.getElementById('player1-tag').innerHTML = 'Player 1 - ' + player_1_symbol.toUpperCase();
+                            document.getElementById('player2-tag').innerHTML = 'Player 2 - ' + player_2_symbol.toUpperCase();*/
+                        }, 2500);
+                };
+
+                function player_choice() {
+                    if (turn_n % 2 != 0) {/* checks if turn number is odd to pick the current player's symbol */
+                        this.children[0].className = player_1_symbol;
+                        this.removeEventListener('click', player_choice);
+                        player_turn_indicator();
+                        turn_n += 1;
+                        if (check_win()) {
+                            player_turn_indicator();
+                            if (winning_squares[0].className == 'o') {
+                                opponent_score.innerHTML = parseInt(opponent_score.innerHTML) + 1;
+                                result = 'lose';
+                                update_score(result);
+                            } else if (winning_squares[0].className == 'x') {
+                                player_score.innerHTML = parseInt(player_score.innerHTML) + 1;
+                                result = 'win';
+                                update_score(result);
+                            };
+                            squares.forEach(square => {
+                                square.removeEventListener('click', player_choice);
+                            });
+                            game_end_animation();
+                            check_symbol_change();
+                            clear_board();
+                        } else if (check_draw()) {
+                            result = 'tie';
+                            update_score(result);
+                            ties_score.innerHTML = parseInt(ties_score.innerHTML) + 1;
+                            game_end_animation();
+                            clear_board();
+                        };
+                    } else {
+                        this.children[0].className = player_2_symbol;
+                        this.removeEventListener('click', player_choice);
+                        player_turn_indicator();
+                        turn_n += 1;
+                        if (check_win()) {
+                            player_turn_indicator();
+                            if (winning_squares[0].className == 'o') {
+                                opponent_score.innerHTML = parseInt(opponent_score.innerHTML) + 1;
+                                result = 'lose';
+                                update_score(result);
+                            } else if (winning_squares[0].className == 'x') {
+                                player_score.innerHTML = parseInt(player_score.innerHTML) + 1;
+                                result = 'win';
+                                update_score(result);
+                            };
+                            squares.forEach(square => {
+                                square.removeEventListener('click', player_choice);
+                            });
+                            game_end_animation();
+                            check_symbol_change();
+                            clear_board();
+                        } else if (check_draw()) {
+                            result = 'tie';
+                            update_score(result);
+                            ties_score.innerHTML = parseInt(ties_score.innerHTML) + 1;
+                            game_end_animation();
+                            clear_board();
+                        };
+                    };
+                };
+
+                squares.forEach(square => {
+                    square.addEventListener('click', player_choice);
+                });
+
+                let scores = document.querySelectorAll(".scores > div > .score");
+                scores.forEach(score => {
+                    if(score.innerHTML.trim().length == 0) {
+                        score.innerHTML += '0';
+                    };
+                });
+            });
+
+            function update_score(result) {
+                if (getCookie('session')) {
+                    fetch('/update-scores', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: document.getElementsByClassName("username")[0].innerText,
+                            result: result,
+                            difficulty: 'none - vs local player'
+                        })
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        console.log(result);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                };
+
+            };
+
+            function getCookie(name) {
+                var re = new RegExp(name + "=([^;]+)");
+                var value = re.exec(document.cookie);
+                return (value != null) ? unescape(value[1]) : null;
+            }
+
+        </script>
+
+{% endblock %}

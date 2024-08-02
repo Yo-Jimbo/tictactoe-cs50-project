@@ -1,0 +1,617 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+    <div class="container">
+        <div class="difficulty-selector">
+            <span>Difficulty: </span>
+            <select id ="difficulty-selector" name="difficulty">
+                <option value='easy'>Easy</option>
+                <option value='normal'>Normal</option>
+                <option value='hard'>Hard</option>
+            </select>
+        </div>
+        <div class="board">
+            <div class="top-left">
+                <div></div>
+            </div>
+            <div class="top-mid">
+                <div></div>
+            </div>
+            <div class="top-right">
+                <div></div>
+            </div>
+            <div class="mid-left">
+                <div></div>
+            </div>
+            <div class="mid-mid">
+                <div></div>
+            </div>
+            <div class="mid-right">
+                <div></div>
+            </div>
+            <div class="bottom-left">
+                <div></div>
+            </div>
+            <div class="bottom-mid">
+                <div></div>
+            </div>
+            <div class="bottom-right">
+                <div></div>
+            </div>
+        </div>
+        <svg class="line" id="mysvg" width="100%" height="100%">
+            <line class="line-segment" x1="0" y1="0" x2="0" y2="0"/>
+        </svg>
+        <div class="scores">
+            <div class="player1">
+                <span id="player1-tag">You - X</span>
+                <span class="score"></span>
+            </div>
+            <div class="ties">
+                <span>Ties</span>
+                <span class="score"></span>
+            </div>
+            <div class="player2">
+                <span id="player2-tag">Opponent - O</span>
+                <span class="score"></span>
+            </div>
+        </div>
+        <div class="change-mode">
+            <form action="/vs-player-local">
+                <input type="submit" value="Play VS Local Player" />
+            </form>
+        </div>
+    </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded',  function() {
+                var difficulty_selector = document.getElementById('difficulty-selector');
+                let difficulty = 'easy';
+                let player_symbol = 'x';
+                let opponent_symbol = 'o';
+                let player_score = document.querySelector(".scores > .player1 > .score");
+                let opponent_score = document.querySelector(".scores > .player2 > .score");
+                let ties_score = document.querySelector(".scores > .ties > .score");
+                let winning_squares;
+                let squares = document.querySelectorAll(".board > div");
+                let turn_n = 1;
+                // listener for difficulty change
+                difficulty_selector.onchange = function() {
+                    var difficulty_selected = document.getElementById('difficulty-selector').value;
+                    difficulty = String(difficulty_selected);
+                    squares.forEach(square => {
+                        square.children[0].removeAttribute('class');
+                        });
+                    winning_squares = [];
+                    player_symbol = 'x';
+                    opponent_symbol = 'o';
+                    document.getElementById('player1-tag').innerHTML = 'You - ' + player_symbol.toUpperCase();
+                    document.getElementById('player2-tag').innerHTML = 'Opponent - ' + opponent_symbol.toUpperCase();
+                    player_score.innerHTML = 0;
+                    opponent_score.innerHTML = 0;
+                    ties_score.innerHTML = 0;
+                    turn_n = 1;
+                    squares.forEach(square => {
+                        square.addEventListener('click', player_choice);
+                    });
+                };
+                const winning_combinations = [
+                    ['.top-left > div', '.top-mid > div', '.top-right > div'],
+                    ['.mid-left > div', '.mid-mid > div', '.mid-right > div'],
+                    ['.bottom-left > div', '.bottom-mid > div', '.bottom-right > div'],
+                    ['.top-left > div', '.mid-left > div', '.bottom-left > div'],
+                    ['.top-mid > div', '.mid-mid > div', '.bottom-mid > div'],
+                    ['.top-right > div', '.mid-right > div', '.bottom-right > div'],
+                    ['.top-right > div', '.mid-mid > div', '.bottom-left > div'],
+                    ['.top-left > div', '.mid-mid > div', '.bottom-right > div']
+                ];
+                const board_corners = [
+                    document.querySelector(".top-left > div"),
+                    document.querySelector(".top-right > div"),
+                    document.querySelector(".bottom-left > div"),
+                    document.querySelector(".bottom-right > div"),
+                ];
+
+
+
+                function check_win() {
+                    for (const combination of winning_combinations) {
+                        const [a, b, c] = combination.map(selector => document.querySelector(selector));
+                        if (a.className && a.className === b.className && b.className === c.className) {
+                            winning_squares = [a, b, c];
+                            return true;
+                        }
+                    }
+                };
+
+                function game_end_animation() {
+                    var empty_squares = [];
+                    squares.forEach(square => {
+                        if(square.children[0].className != player_symbol && square.children[0].className != opponent_symbol) {
+                            empty_squares.push(square);
+                        };
+                    });
+                    if (check_win()) {
+                        // animate the line going across the winning combination
+                        const line = document.querySelector('.line > .line-segment');
+                        const [a, b, c] = winning_squares;
+
+                        const startX = a.offsetLeft + a.offsetWidth / 2;
+                        const startY = a.offsetTop + a.offsetHeight / 2;
+                        const endX = c.offsetLeft + c.offsetWidth / 2;
+                        const endY = c.offsetTop + c.offsetHeight / 2;
+
+                        line.setAttribute('x1', startX);
+                        line.setAttribute('y1', startY);
+                        line.setAttribute('x2', startX);
+                        line.setAttribute('y2', startY);
+
+                        const animationSteps = 50; // adjust for smoothness of animation
+                        let step = 0;
+
+                        const animateLine = () => {
+                            if (step <= animationSteps) {
+                                const x = startX + (endX - startX) * step / animationSteps;
+                                const y = startY + (endY - startY) * step / animationSteps;
+
+                                line.setAttribute('x2', x);
+                                line.setAttribute('y2', y);
+
+                                step++;
+                                requestAnimationFrame(animateLine);
+                            }
+                        };
+
+                        animateLine();
+
+                        setTimeout(() => {
+                            line.setAttribute('x1', 0);
+                            line.setAttribute('y1', 0);
+                            line.setAttribute('x2', 0);
+                            line.setAttribute('y2', 0);
+                        }, 2500);
+                    } else {
+                        // if draw, the grid blinks 4 times
+                        let board_grid = document.querySelector('.board');
+                        let blink_counter = 0;
+                        let blink_interval = setInterval(() => {
+                            if (window.getComputedStyle(board_grid).backgroundColor == 'rgb(0, 0, 0)') {
+                                board_grid.style.backgroundColor = 'white';
+                            } else if (window.getComputedStyle(board_grid).backgroundColor == 'rgb(255, 255, 255)') {
+                                board_grid.style.backgroundColor = 'black';
+                            };
+                            blink_counter++;
+                            if (blink_counter >= 4) {
+                                clearInterval(blink_interval);
+                            }
+                        }, 500);
+                    };
+                };
+
+                function check_draw() {
+                    var empty_squares = [];
+                    squares.forEach(square => {
+                        if(square.children[0].className != player_symbol && square.children[0].className != opponent_symbol) {
+                            empty_squares.push(square);
+                        };
+                    });
+                    if (empty_squares.length == 0) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+                function clear_board() {
+                    setTimeout(() => {
+                        squares.forEach(square => {
+                        square.children[0].removeAttribute('class');
+                        });
+                    }, 2500);
+                    winning_squares = [];
+                    first_opponent_move();
+                    turn_n = 1
+                }
+
+                function check_symbol_change() {
+                    if (winning_squares[0].className == 'x') {
+                        setTimeout(() => {
+                            temp = player_symbol;
+                            player_symbol = opponent_symbol;
+                            opponent_symbol = temp;
+                            document.getElementById('player1-tag').innerHTML = 'You - ' + player_symbol.toUpperCase();
+                            document.getElementById('player2-tag').innerHTML = 'Opponent - ' + opponent_symbol.toUpperCase();
+                        }, 2500);
+                    };
+                };
+
+
+
+                function computer_choice() {
+                    /* Computer's turn starts: check for empty squares, then based on difficulty, make a selection */
+                    var empty_squares = [];
+                    squares.forEach(square => {
+                        if(square.children[0].className != player_symbol && square.children[0].className != opponent_symbol) {
+                            empty_squares.push(square);
+                        };
+                    });
+                    setTimeout (function() { /* add delay to computer's move */
+                        if (empty_squares.length != 0) {
+                            if (difficulty == 'easy') {
+                                var random_empty_square = empty_squares[Math.floor(Math.random()*empty_squares.length)];
+                                random_empty_square.children[0].className = opponent_symbol;
+                                make_empty_squares_clickable();
+
+                            } else if (difficulty == 'normal') {
+                                if (!check_possible_win()) {
+                                    var random_empty_square = empty_squares[Math.floor(Math.random()*empty_squares.length)];
+                                    random_empty_square.children[0].className = opponent_symbol;
+                                    make_empty_squares_clickable();
+                                }
+
+                            } else if (difficulty == 'hard') {
+                                if (!check_possible_win()) {
+                                    //if computer plays second
+                                    if (opponent_symbol == 'o') {
+                                        if (turn_n == 1) {
+                                            if (document.querySelector(".mid-mid > div").className == player_symbol) {
+                                                random_board_corner_picker();
+                                                make_empty_squares_clickable();
+                                            } else {
+                                                document.querySelector(".mid-mid > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            }
+                                        };
+                                        if (turn_n == 2) {
+                                            // if the player has taken the center and forms a diagonal with the computer symbol, take a free corner
+                                            if (
+                                                (document.querySelector(".mid-mid > div").className == player_symbol && document.querySelector(".top-left > div").className == player_symbol && document.querySelector(".bottom-right > div").className == opponent_symbol) ||
+                                                (document.querySelector(".mid-mid > div").className == player_symbol && document.querySelector(".top-right > div").className == player_symbol && document.querySelector(".bottom-left > div").className == opponent_symbol) ||
+                                                (document.querySelector(".mid-mid > div").className == player_symbol && document.querySelector(".bottom-left > div").className == player_symbol && document.querySelector(".top-right > div").className == opponent_symbol) ||
+                                                (document.querySelector(".mid-mid > div").className == player_symbol && document.querySelector(".bottom-right > div").className == player_symbol && document.querySelector(".top-left > div").className == opponent_symbol)
+                                            ) {
+                                                random_board_corner_picker();
+                                                make_empty_squares_clickable();
+                                            // if the player has taken an edge and an opposite corner, take the corner near the edge with player symbol
+                                            } else if (document.querySelector(".mid-left > div").className == player_symbol && document.querySelector(".top-right > div").className == player_symbol) {
+                                                document.querySelector(".top-left > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".mid-left > div").className == player_symbol && document.querySelector(".bottom-right > div").className == player_symbol) {
+                                                document.querySelector(".bottom-left > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".mid-right > div").className == player_symbol && document.querySelector(".bottom-left > div").className == player_symbol) {
+                                                document.querySelector(".bottom-right > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".mid-right > div").className == player_symbol && document.querySelector(".top-left > div").className == player_symbol) {
+                                                document.querySelector(".top-right > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".top-mid > div").className == player_symbol && document.querySelector(".bottom-left > div").className == player_symbol) {
+                                                document.querySelector(".top-left > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".top-mid > div").className == player_symbol && document.querySelector(".bottom-right > div").className == player_symbol) {
+                                                document.querySelector(".top-right > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".bottom-mid > div").className == player_symbol && document.querySelector(".top-left > div").className == player_symbol) {
+                                                document.querySelector(".bottom-left > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".bottom-mid > div").className == player_symbol && document.querySelector(".top-right > div").className == player_symbol) {
+                                                document.querySelector(".bottom-right > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            // if the player has taken a diagonal with computer symbol in the middle, computer takes an edge
+                                            } else if (
+                                                (document.querySelector(".top-left > div").className == player_symbol && document.querySelector(".bottom-right > div").className == player_symbol) ||
+                                                (document.querySelector(".top-right > div").className == player_symbol && document.querySelector(".bottom-left > div").className == player_symbol)
+                                            ) {
+                                                random_board_corner_picker();
+                                                make_empty_squares_clickable();
+                                            // if the player has taken close edges, take the edges between the player symbols
+                                            } else if (document.querySelector(".mid-left > div").className == player_symbol && document.querySelector(".bottom-mid > div").className == player_symbol) {
+                                                document.querySelector(".bottom-left > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".mid-left > div").className == player_symbol && document.querySelector(".top-mid > div").className == player_symbol) {
+                                                document.querySelector(".top-left > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".mid-right > div").className == player_symbol && document.querySelector(".top-mid > div").className == player_symbol) {
+                                                document.querySelector(".top-right > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            } else if (document.querySelector(".mid-right > div").className == player_symbol && document.querySelector(".bottom-mid > div").className == player_symbol) {
+                                                document.querySelector(".bottom-right > div").className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            // if the player has taken opposite edges, take a random corner
+                                            } else if (
+                                                (document.querySelector(".mid-left > div").className == player_symbol && document.querySelector(".mid-right > div").className == player_symbol) ||
+                                                (document.querySelector(".top-mid > div").className == player_symbol && document.querySelector(".bottom-mid > div").className == player_symbol)
+                                            ) {
+                                                random_board_corner_picker();
+                                                make_empty_squares_clickable();
+                                            };
+                                        };
+                                        if (turn_n == 3) {
+                                            // if the player has taken corners from the same row or column and the opposite edge, take one of the remaining corners
+                                            if (
+                                                (document.querySelector(".mid-left > div").className == player_symbol && document.querySelector(".top-right > div").className == player_symbol && document.querySelector(".bottom-right > div").className == player_symbol) ||
+                                                (document.querySelector(".mid-right > div").className == player_symbol && document.querySelector(".top-left > div").className == player_symbol && document.querySelector(".bottom-left > div").className == player_symbol) ||
+                                                (document.querySelector(".top-mid > div").className == player_symbol && document.querySelector(".bottom-left > div").className == player_symbol && document.querySelector(".bottom-right > div").className == player_symbol) ||
+                                                (document.querySelector(".bottom-mid > div").className == player_symbol && document.querySelector(".top-left > div").className == player_symbol && document.querySelector(".top-right > div").className == player_symbol)
+                                            ) {
+                                                random_board_corner_picker();
+                                                make_empty_squares_clickable();
+                                            } else {
+                                                var random_empty_square = empty_squares[Math.floor(Math.random()*empty_squares.length)];
+                                                random_empty_square.children[0].className = opponent_symbol;
+                                                make_empty_squares_clickable();
+                                            };
+                                        };
+                                        if (turn_n == 4) {
+                                            var random_empty_square = empty_squares[Math.floor(Math.random()*empty_squares.length)];
+                                            random_empty_square.children[0].className = opponent_symbol;
+                                            make_empty_squares_clickable();
+                                        };
+
+                                    } else if (opponent_symbol == 'x') {
+                                        if (turn_n == 1) {
+                                            random_board_corner_picker();
+                                            make_empty_squares_clickable();
+                                        };
+                                        if (turn_n == 2) {
+                                            if (document.querySelector(".mid-mid > div").className == player_symbol) {
+                                                if (document.querySelector(".top-left > div").className == opponent_symbol) {
+                                                    document.querySelector(".bottom-right > div").className = opponent_symbol;
+                                                    make_empty_squares_clickable();
+                                                } else if (document.querySelector(".top-right > div").className == opponent_symbol) {
+                                                    document.querySelector(".bottom-left > div").className = opponent_symbol;
+                                                    make_empty_squares_clickable();
+                                                } else if (document.querySelector(".bottom-right > div").className == opponent_symbol) {
+                                                    document.querySelector(".top-left > div").className = opponent_symbol;
+                                                    make_empty_squares_clickable();
+                                                } else if (document.querySelector(".bottom-left > div").className == opponent_symbol) {
+                                                    document.querySelector(".top-right > div").className == opponent_symbol;
+                                                    make_empty_squares_clickable();
+                                                }
+                                            } else {
+                                                if (document.querySelector(".top-left > div").className == opponent_symbol) {
+                                                    if (!document.querySelector(".top-mid > div").className && !document.querySelector(".top-right > div").className) {
+                                                        document.querySelector(".top-right > div").className = opponent_symbol;
+                                                        make_empty_squares_clickable();
+                                                    } else if (!document.querySelector(".mid-left > div").className && !document.querySelector(".bottom-left > div").className) {
+                                                        document.querySelector(".bottom-left > div").className = opponent_symbol;
+                                                        make_empty_squares_clickable();
+                                                    };
+                                                } else if (document.querySelector(".top-right > div").className == opponent_symbol) {
+                                                    if (!document.querySelector(".top-mid > div").className && !document.querySelector(".top-left > div").className) {
+                                                        document.querySelector(".top-left > div").className = opponent_symbol;
+                                                        make_empty_squares_clickable();
+                                                    } else if (!document.querySelector(".mid-right > div").className && !document.querySelector(".bottom-right > div").className) {
+                                                        document.querySelector(".bottom-right > div").className = opponent_symbol;
+                                                        make_empty_squares_clickable();
+                                                    };
+                                                } else if (document.querySelector(".bottom-left > div").className == opponent_symbol) {
+                                                    if (!document.querySelector(".mid-left > div").className && !document.querySelector(".top-left > div").className) {
+                                                        document.querySelector(".top-left > div").className = opponent_symbol;
+                                                        make_empty_squares_clickable();
+                                                    } else if (!document.querySelector(".bottom-mid > div").className && !document.querySelector(".bottom-right > div").className) {
+                                                        document.querySelector(".bottom-right > div").className = opponent_symbol;
+                                                        make_empty_squares_clickable();
+                                                    };
+                                                } else if (document.querySelector(".bottom-right > div").className == opponent_symbol) {
+                                                    if (!document.querySelector(".mid-right > div").className && !document.querySelector(".top-right > div").className) {
+                                                        document.querySelector(".top-right > div").className = opponent_symbol;
+                                                        make_empty_squares_clickable();
+                                                    } else if (!document.querySelector(".bottom-mid > div").className && !document.querySelector(".bottom-left > div").className) {
+                                                        document.querySelector(".bottom-left > div").className = opponent_symbol;
+                                                        make_empty_squares_clickable();
+                                                    };
+                                                };
+                                            };
+                                        };
+                                        if (turn_n == 3) {
+                                            random_board_corner_picker();
+                                            make_empty_squares_clickable();
+                                        };
+                                    };
+                                };
+                            };
+                            turn_n += 1;
+                        };
+                        if (check_win()) {
+                            opponent_score.innerHTML = parseInt(opponent_score.innerHTML) + 1;
+                            result = 'lose';
+                            update_score(result);
+                            squares.forEach(square => {
+                                square.removeEventListener('click', player_choice);
+                            });
+                            game_end_animation();
+                            check_symbol_change();
+                            clear_board();
+                        } else if (check_draw()) {
+                            ties_score.innerHTML = parseInt(ties_score.innerHTML) + 1;
+                            result = 'tie';
+                            update_score(result);
+                            game_end_animation();
+                            clear_board();
+                        };
+                    }, 200);
+                };
+
+                function first_opponent_move() {
+                    setTimeout(() => {
+                        if (opponent_symbol == 'x') {
+                            if (difficulty == 'normal' || difficulty == 'hard') {
+                                random_board_corner_picker();
+                                make_empty_squares_clickable();
+                                turn_n += 1;
+                            } else {
+                                var random_first_square = squares[Math.floor(Math.random()*squares.length)];
+                                random_first_square.children[0].className = opponent_symbol;
+                                make_empty_squares_clickable();
+                            };
+                        } else {
+                            make_empty_squares_clickable();
+                        };
+                    }, 2700);
+                };
+
+                function random_board_corner_picker() {
+                    random_board_corner = board_corners[Math.floor(Math.random()*board_corners.length)];
+                    if (random_board_corner.className == player_symbol || random_board_corner.className == opponent_symbol) {
+                        random_board_corner_picker();
+                    } else {
+                        random_board_corner.className = opponent_symbol;
+                        return true;
+                    };
+                }
+
+                function make_empty_squares_clickable() {
+                    squares.forEach(square => {
+                        if (square.children[0].className != opponent_symbol && square.children[0].className != player_symbol) {
+                            square.addEventListener('click', player_choice);
+                        };
+                    });
+                    squares.forEach(square => {
+                        if (square.children[0].className == player_symbol || square.children[0].className == opponent_symbol) {
+                            square.removeEventListener('click', player_choice);
+                        };
+                    });
+                }
+
+                function check_possible_win() {
+                    for (const combination of winning_combinations) {
+                        const [a, b, c] = combination.map(selector => document.querySelector(selector));
+
+                        const combination_squares = [a, b, c];
+                        const square_symbols = combination_squares.map(square => square.className);
+
+                        const symbol_count = {};
+
+                        // Count how many symbols there are
+                        for (const square_symbol of square_symbols) {
+                            if (square_symbol) {
+                                symbol_count[square_symbol] = (symbol_count[square_symbol] || 0) + 1;
+                            };
+                        };
+
+                        // Checks if there are two equal symbols and an empty square, if true then place computer's symbol in empty square
+                        for (const square_symbol in symbol_count) {
+                            if (symbol_count[opponent_symbol] === 2) {
+                                for (const combination_square of combination_squares) {
+                                    if (!combination_square.className) {
+                                        combination_square.className = opponent_symbol;
+                                        make_empty_squares_clickable()
+                                        return true;
+                                    };
+                                };
+                            };
+                        };
+                    };
+
+                    for (const combination of winning_combinations) {
+                        const [a, b, c] = combination.map(selector => document.querySelector(selector));
+
+                        const combination_squares = [a, b, c];
+                        const square_symbols = combination_squares.map(square => square.className);
+
+                        const symbol_count = {};
+
+                        // Count how many symbols there are
+                        for (const square_symbol of square_symbols) {
+                            if (square_symbol) {
+                                symbol_count[square_symbol] = (symbol_count[square_symbol] || 0) + 1;
+                            };
+                        };
+
+                        // Checks if there are two equal symbols and an empty square, if true then place computer's symbol in empty square
+                        for (const square_symbol in symbol_count) {
+                            if (symbol_count[player_symbol] === 2) {
+                                for (const combination_square of combination_squares) {
+                                    if (!combination_square.className) {
+                                        combination_square.className = opponent_symbol;
+                                        make_empty_squares_clickable()
+                                        return true;
+                                    };
+                                };
+                            };
+                        };
+                    };
+                    make_empty_squares_clickable()
+                    return false;
+                };
+
+                function update_score(result) {
+                    if (getCookie('session')) {
+                        fetch('/update-scores', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                username: document.getElementsByClassName("username")[0].innerText,
+                                result: result,
+                                difficulty: difficulty
+                            })
+                        })
+                        .then(response => response.text())
+                        .then(result => {
+                            console.log(result);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                    };
+
+                };
+
+                function getCookie(name) {
+                    var re = new RegExp(name + "=([^;]+)");
+                    var value = re.exec(document.cookie);
+                    return (value != null) ? unescape(value[1]) : null;
+                }
+
+                function player_choice() {
+                    this.children[0].className = player_symbol;
+                    squares.forEach(square => {
+                        square.removeEventListener('click', player_choice);
+                    });
+                    if (check_win()) {
+                        player_score.innerHTML = parseInt(player_score.innerHTML) + 1;
+                        result = 'win';
+                        update_score(result);
+                        squares.forEach(square => {
+                            square.removeEventListener('click', player_choice);
+                        });
+                        game_end_animation();
+                        check_symbol_change();
+                        clear_board();
+                    } else if (check_draw()) {
+                            ties_score.innerHTML = parseInt(ties_score.innerHTML) + 1;
+                            result = 'tie';
+                            update_score(result);
+                            game_end_animation();
+                            clear_board();
+                    } else {
+                        computer_choice();
+                    };
+                };
+                var empty_squares = [];
+                squares.forEach(square => {
+                    if (square.children[0].className != player_symbol && square.children[0].className != opponent_symbol) {
+                        empty_squares.push(square);
+                    };
+                });
+                empty_squares.forEach(empty_square => {
+                    empty_square.addEventListener('click', player_choice);
+                });
+
+                let scores = document.querySelectorAll(".scores > div > .score");
+                scores.forEach(score => {
+                    if(score.innerHTML.trim().length == 0) {
+                        score.innerHTML += '0';
+                    };
+                });
+            });
+        </script>
+
+{% endblock %}

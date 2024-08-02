@@ -1,0 +1,171 @@
+Size for brand
+nav .navbar-brand
+{
+    font-size: xx-large;
+}
+
+nav .navbar-brand .blue
+{
+    color: #537fbe;
+}
+nav .navbar-brand .red
+{
+    color: #ea433b;
+}
+nav .navbar-brand .yellow
+{
+    color: #f5b82e;
+}
+nav .navbar-brand .green
+{
+    color: #2e944b;
+}
+
+.register-txt
+{
+    background-color: 10px;
+}
+
+.bold-text
+{
+    font-weight: bold;
+}
+
+.board
+{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    grid-gap: 5px;
+    background-color: black;
+    aspect-ratio: 1;
+    width: 80vw;
+    max-width: 600px;
+    margin-top: calc(200px - 15%)
+}
+
+.board > div
+{
+    background-color: white;
+    font-size: 6vw;
+    font-family: Arial;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    font-weight: bold;
+}
+
+.board > div > div
+{
+    width: 100%;
+    height: 100%;
+}
+
+.board > div > .x
+{
+    background-image: url(x-sign.png);
+    background-size: 70%;
+    background-origin: content-box;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.board > div > .o
+{
+    background-image: url(o-sign.png);
+    background-size: 70%;
+    background-origin: content-box;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.center-contents
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.scores
+{
+    display: flex;
+    width: 80vw;
+    max-width: 600px;
+    font-family: Roboto;
+    font-weight: bold;
+}
+
+.scores > div
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center horizontally */
+    margin: auto;
+    width: 100%;
+    height: 100%;
+    margin-top: 50px;
+    font-size: 20px;
+}
+
+.container
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center horizontally */
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 5px;
+}
+
+.line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.line-segment {
+    stroke: black; /* Color of the line */
+    stroke-width: 5; /* Thickness of the line */
+}
+
+@media (max-width: 576px) {
+    .scores {
+      font-size: 0.85rem; /* Adjust the font size as needed */
+    }
+
+    .scores > div {
+      font-size: inherit; /* Inherit font size from parent (.scores) */
+    }
+}
+
+.score {
+    margin-top: 0.5em;
+}
+
+.player1 {
+    border:3px solid white
+}
+
+.player2 {
+    border:3px solid white
+}
+
+.difficulty-selector
+{
+    margin-bottom: 1.0em;
+}
+
+.table
+{
+    margin-bottom: 5.0em;
+}
+
+h1
+{
+    margin-bottom: 2.0em;
+}

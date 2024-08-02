@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+
+<h1>Profile Statistics</h1>
+
+<table class="table-center table">
+    <thead>
+        <col>
+        <colgroup span="4"></colgroup>
+        <tr>
+          <th colspan="4" scope="colgroup">VS Easy Computer</th>
+        </tr>
+        <tr>
+          <th colspan="1" scope="col">Wins</th>
+          <th colspan="1" scope="col">Losses</th>
+          <th colspan="1" scope="col">Ties</th>
+          <th colspan="1" scope="col">Win Ratio</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr scope="row">
+            <td>{{ user_scores[0]["pvc_easy_wins"] }}</td>
+            <td>{{ user_scores[0]["pvc_easy_losses"] }}</td>
+            <td>{{ user_scores[0]["pvc_easy_ties"] }}</td>
+            <td>{{ pvc_easy_ratio }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="table-center table">
+    <thead>
+        <col>
+        <colgroup span="4"></colgroup>
+        <tr>
+          <th colspan="4" scope="colgroup">VS Normal Computer</th>
+        </tr>
+        <tr>
+          <th colspan="1" scope="col">Wins</th>
+          <th colspan="1" scope="col">Losses</th>
+          <th colspan="1" scope="col">Ties</th>
+          <th colspan="1" scope="col">Win Ratio</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr scope="row">
+            <td>{{ user_scores[0]["pvc_normal_wins"] }}</td>
+            <td>{{ user_scores[0]["pvc_normal_losses"] }}</td>
+            <td>{{ user_scores[0]["pvc_normal_ties"] }}</td>
+            <td>{{ pvc_normal_ratio }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="table-center table">
+    <thead>
+        <col>
+        <colgroup span="4"></colgroup>
+        <tr>
+          <th colspan="4" scope="colgroup">VS Hard Computer</th>
+        </tr>
+        <tr>
+          <th colspan="1" scope="col">Wins</th>
+          <th colspan="1" scope="col">Losses</th>
+          <th colspan="1" scope="col">Ties</th>
+          <th colspan="1" scope="col">Win Ratio</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr scope="row">
+            <td>{{ user_scores[0]["pvc_hard_wins"] }}</td>
+            <td>{{ user_scores[0]["pvc_hard_losses"] }}</td>
+            <td>{{ user_scores[0]["pvc_hard_ties"] }}</td>
+            <td>{{ pvc_hard_ratio }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="table-center table">
+    <thead>
+        <col>
+        <colgroup span="4"></colgroup>
+        <tr>
+          <th colspan="4" scope="colgroup">VS Local Player</th>
+        </tr>
+        <tr>
+          <th colspan="1" scope="col">Wins</th>
+          <th colspan="1" scope="col">Losses</th>
+          <th colspan="1" scope="col">Ties</th>
+          <th colspan="1" scope="col">Win Ratio</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr scope="row">
+            <td>{{ user_scores[0]["pvp_wins"] }}</td>
+            <td>{{ user_scores[0]["pvp_losses"] }}</td>
+            <td>{{ user_scores[0]["pvp_ties"] }}</td>
+            <td>{{ pvp_offline_ratio }}</td>
+        </tr>
+    </tbody>
+</table>
+
+{% endblock %}
